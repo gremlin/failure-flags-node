@@ -1,4 +1,5 @@
 const { fetchExperiment } = require('./src/fetch.js');
+const effect = require('./src/fault.js');
 
 const ifExperimentActive = async (name, attributes, behavior, debug = false) => {
   if(debug) console.log('ifExperimentActive', name, attributes);
@@ -11,7 +12,11 @@ const ifExperimentActive = async (name, attributes, behavior, debug = false) => 
     const experiment = await fetchExperiment(name, attributes);
     if(experiment != null) {
       if(debug) console.log('fetched', experiment);
-      await behavior(experiment);
+      try {
+        await behavior(experiment);
+      } catch(behaviorError) {
+        if(debug) console.log('provided behavior error', behaviorError)
+      }
       return true;
     }
     if(debug) console.log('fetched was null');
@@ -20,7 +25,8 @@ const ifExperimentActive = async (name, attributes, behavior, debug = false) => 
     if(debug) console.log('unable to fetch experiment', ignore);
     return false;
   }
+
   return false;
 }
 
-module.exports = exports = { ifExperimentActive, fetchExperiment };
+module.exports = exports = { ifExperimentActive, fetchExperiment, effect };

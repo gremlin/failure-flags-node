@@ -50,6 +50,11 @@ test('ifExperimentActive does call callback', async () => {
   expect(await failureflags.ifExperimentActive('custom', {a:'1',b:'2'}, (t)=>{ console.log('callback called', t); })).toBe(true);
 });
 
+test('ifExperimentActive returns true if used experiment but behavior threw exception', async () => {
+  expect(await failureflags.ifExperimentActive('custom', {a:'1',b:'2'}, (t)=>{ throw 'any'; })).toBe(true);
+});
+
+
 afterAll(() => {
   mockServer.close();
 });
