@@ -34,21 +34,19 @@ const gremlin = require('@allingeek-gremlin/failure-flags');
 module.exports.handler = async (event) => {
   start = Date.now();
 
-  // If there is an experiment defined for this failure-flag, that is also targeting the
-  // HTTP method and or path then this will express the effects it describes.
+  // If there is an experiment defined for this failure-flag, that is also
+  // targeting the HTTP method and or path then this will express the 
+  // effects it describes.
   await gremlin.ifExperimentActive(
     'http-ingress',
-    { method: event.requestContext.http.method, path: event.requestContext.http.path },
+    { method: event.requestContext.http.method,
+      path: event.requestContext.http.path },
     gremlin.effect.flatLatency);
 
   return {
     statusCode: 200,
     body: JSON.stringify(
-      {
-        message: "Gremlin-Lambda Demo",
-        processingTime: Date.now() - start,
-        timestamp: event.requestContext.time,
-      },
+      {processingTime: Date.now() - start, timestamp: event.requestContext.time},
       null,
       2
     ),
