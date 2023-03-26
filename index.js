@@ -11,7 +11,7 @@ const ifExperimentActive = async (name, attributes, behavior, debug = false) => 
   try {
     const experiment = await fetchExperiment(name, attributes);
     if(experiment != null) {
-      if(debug) console.log('fetched', experiment);
+      if(debug) console.log('fetched experiment', experiment);
       try {
         await behavior(experiment);
       } catch(behaviorError) {
@@ -19,7 +19,7 @@ const ifExperimentActive = async (name, attributes, behavior, debug = false) => 
       }
       return true;
     }
-    if(debug) console.log('fetched was null');
+    if(debug) console.log('no experiment for', name, attributes);
     return false;
   } catch(ignore) {
     if(debug) console.log('unable to fetch experiment', ignore);
