@@ -1,10 +1,57 @@
 # failure-flags-node
 
+Failure Flags is a node SDK for working with the Gremlin fault injection platform to build application-level chaos experiments and reliability tests. This library works in concert with Gremlin-Lambda, a Lambda extension, or Gremlin-Container a conatiner sidecar agent. This architecture minimizes the impact to your application code, simplifies configuration, and makes adoption painless.
+
+Just like feature flags, Failure Flags are safe to add to and leave in your application. Failure Flags will always fail safe if it cannot communicate with its sidecare or its sidecar is misconfigured.
+
+You can get started by adding @gremlin/failure-flags to your package dependencies:
+
+```sh
+npm i --save @allingeek-gremlin/failure-flags
+```
+
+Then instrument the the part of your application where you want to inject faults. 
+
 ```js
 const failureflags = require(`@allingeek-gremlin/failure-flags`);
+
+...
 
 await failureflags.ifExperimentActive(
   'flagname',                       // the name of your failure flag
   {},                               // additional attibutes about this invocation
   failureflags.effect.flatLatency;) // an off-the-shelf impact
+
+...
+```
+
+The best spots to add a failure flag are just before or just after a call to one of your network dependencies like a database or other network service. Or you can instrument your request handler and affect the way your application responses to its callers. Here's a simple Lambda example:
+
+```js
+// Note: you must bring in the failure-flags library
+const gremlin = require('@allingeek-gremlin/failure-flags');
+
+module.exports.handler = async (event) => {
+  start = Date.now();
+
+  // If there is an experiment defined for this failure-flag, that is also targeting the
+  // HTTP method and or path then this will express the effects it describes.
+  await gremlin.ifExperimentActive(
+    'http-ingress',
+    { method: event.requestContext.http.method, path: event.requestContext.http.path },
+    gremlin.effect.flatLatency);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(
+      {
+        message: "Gremlin-Lambda Demo",
+        processingTime: Date.now() - start,
+        timestamp: event.requestContext.time,
+      },
+      null,
+      2
+    ),
+  };
+};
 ```
