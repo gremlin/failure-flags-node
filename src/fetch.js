@@ -1,6 +1,7 @@
 const { request } = require('http');
 
 const fetchExperiment = async (name, attributes, debug = false) => {
+  if(debug) console.log('fetch experiment for', name, attributes);
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
       'name': name,
