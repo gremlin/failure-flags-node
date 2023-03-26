@@ -3,14 +3,21 @@ const flatLatency = async (experiment) => {
     await timeout(parseInt(experiment.effect.latency, 10));
 }
 
-const exception = async (experiment, message = 'Exception injected by Gremlin') => {
+const exception = (experiment) => {
   if(experiment && experiment.effect && experiment.effect.exception) 
-    throw new Error(message)
+    if(experiment.effect.exception.message)
+      throw new Error(experiment.effect.exception.message);
+    else
+      throw new Error('Exception injected by Gremlin');
 }
-
 
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-module.exports = exports = { flatLatency, exception };
+const delayedException = async (e) => {
+  await flatLatency(e);
+  exception(e);
+}
+
+module.exports = exports = { flatLatency, exception, delayedException };

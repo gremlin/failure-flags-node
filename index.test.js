@@ -23,6 +23,44 @@ let responses = {
     effect: {
       "latency-flat": "6000"
     }
+  },
+  defaultBehavior: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      "latency": "1000",
+      "exception": {}
+    }
+  },
+  defaultBehaviorWithMessage: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      "latency": "1000",
+      "exception": { 'message': 'Custom message' }
+    }
+  },
+  defaultBehaviorWithNoException: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      "latency": "500",
+    }
   }
 };
 
@@ -39,21 +77,65 @@ beforeAll(() => {
 });
 
 test('ifExperimentActive does nothing if callback is not a function', async () => {
-  expect(await failureflags.ifExperimentActive('custom', {a:'1',b:'2'}, 'not a function', false)).toBe(false);
+  expect(await failureflags.ifExperimentActive({
+    name: 'custom',
+    labels: {a:'1',b:'2'},
+    behavior: 'not a function',
+   debug: false})).toBe(false);
 });
 
 test('ifExperimentActive does nothing if no experiment for failure flag', async () => {
-  expect(await failureflags.ifExperimentActive('doesnotexist', {a:'1',b:'2'}, ()=>{}, false)).toBe(false);
+  expect(await failureflags.ifExperimentActive({
+    name: 'doesnotexist',
+    labels: {a:'1',b:'2'},
+    behavior: ()=>{},
+    debug: false})).toBe(false);
 });
 
 test('ifExperimentActive does call callback', async () => {
-  expect(await failureflags.ifExperimentActive('custom', {a:'1',b:'2'}, (t)=>{ console.log('callback called', t); })).toBe(true);
+  expect(await failureflags.ifExperimentActive({
+    name: 'custom',
+    labels: {a:'1',b:'2'},
+    behavior: (t)=>{ console.log('callback called', t); }})).toBe(true);
 });
 
-test('ifExperimentActive returns true if used experiment but behavior threw exception', async () => {
-  expect(await failureflags.ifExperimentActive('custom', {a:'1',b:'2'}, (t)=>{ throw 'any'; })).toBe(true);
+
+test('ifExperimentActive default behavior is delayedException with default error message', async () => {
+  try {
+    await failureflags.ifExperimentActive({
+      name: 'defaultBehavior', 
+      labels: {a:'1',b:'2'},
+      debug: false});
+    expect(true).toBe(false); // always reject if this line is reached.
+  } catch(e) {
+    expect(e).not.toBeNull();
+    expect(e.message).toBe('Exception injected by Gremlin');
+  }
 });
 
+test('ifExperimentActive default behavior is delayedException with custom error message', async () => {
+  try {
+    await failureflags.ifExperimentActive({
+      name: 'defaultBehaviorWithMessage', 
+      labels: {a:'1',b:'2'},
+      debug: false});
+    expect(true).toBe(false); // always reject if this line is reached.
+  } catch(e) {
+    expect(e).not.toBeNull();
+    expect(e.message).toBe('Custom message');
+  }
+});
+
+test('ifExperimentActive default behavior is delayedException with no exception', async () => {
+  try {
+    await failureflags.ifExperimentActive({
+      name: 'defaultBehaviorWithNoException', 
+      labels: {a:'1',b:'2'},
+      debug: false});
+  } catch(e) {
+    expect(true).toBe(false); // always reject if this line is reached.
+  }
+});
 
 afterAll(() => {
   mockServer.close();

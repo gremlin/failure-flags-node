@@ -17,10 +17,9 @@ const failureflags = require(`@allingeek-gremlin/failure-flags`);
 
 ...
 
-await failureflags.ifExperimentActive(
-  'flagname',                       // the name of your failure flag
-  {},                               // additional attibutes about this invocation
-  failureflags.effect.flatLatency;) // an off-the-shelf impact
+await failureflags.ifExperimentActive({
+  name: 'flagname',                 // the name of your failure flag
+  labels: {})                       // additional attibutes about this invocation
 
 ...
 ```
@@ -37,11 +36,43 @@ module.exports.handler = async (event) => {
   // If there is an experiment defined for this failure-flag, that is also
   // targeting the HTTP method and or path then this will express the 
   // effects it describes.
-  await gremlin.ifExperimentActive(
-    'http-ingress',
-    { method: event.requestContext.http.method,
+  await gremlin.ifExperimentActive({
+    name: 'http-ingress',
+    labels: { 
+      method: event.requestContext.http.method,
+      path: event.requestContext.http.path }});
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(
+      {processingTime: Date.now() - start, timestamp: event.requestContext.time},
+      null,
+      2
+    ),
+  };
+};
+```
+
+You can always bring your own behaviors and effects by providing a behavior function. Here's another Lambda example that writes the experiment data to the console instead of changing the application behavior:
+
+```js
+// Note: you must bring in the failure-flags library
+const gremlin = require('@allingeek-gremlin/failure-flags');
+
+module.exports.handler = async (event) => {
+  start = Date.now();
+
+  // If there is an experiment defined for this failure-flag, that is also
+  // targeting the HTTP method and or path then this will express the 
+  // effects it describes.
+  await gremlin.ifExperimentActive({
+    name: 'http-ingress',
+    labels: { 
+      method: event.requestContext.http.method,
       path: event.requestContext.http.path },
-    gremlin.effect.flatLatency);
+    behavior: async (experiment) => {
+      console.log('handling the experiment', experiment);
+    }});
 
   return {
     statusCode: 200,
