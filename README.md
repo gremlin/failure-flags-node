@@ -1,4 +1,4 @@
-# failure-flags-node
+# failure-flags
 
 Failure Flags is a node SDK for working with the Gremlin fault injection platform to build application-level chaos experiments and reliability tests. This library works in concert with Gremlin-Lambda, a Lambda extension, or Gremlin-Container a container sidecar agent. This architecture minimizes the impact to your application code, simplifies configuration, and makes adoption painless.
 
@@ -7,13 +7,13 @@ Just like feature flags, Failure Flags are safe to add to and leave in your appl
 You can get started by adding @gremlin/failure-flags to your package dependencies:
 
 ```sh
-npm i --save @allingeek-gremlin/failure-flags
+npm i --save @gremlin/failure-flags
 ```
 
 Then instrument the part of your application where you want to inject faults. 
 
 ```js
-const failureflags = require(`@allingeek-gremlin/failure-flags`);
+const failureflags = require(`@gremlin/failure-flags`);
 
 ...
 
@@ -28,7 +28,7 @@ The best spots to add a failure flag are just before or just after a call to one
 
 ```js
 // Note: you must bring in the failure-flags library
-const gremlin = require('@allingeek-gremlin/failure-flags');
+const gremlin = require('@gremlin/failure-flags');
 
 module.exports.handler = async (event) => {
   start = Date.now();
@@ -57,7 +57,7 @@ You can always bring your own behaviors and effects by providing a behavior func
 
 ```js
 // Note: you must bring in the failure-flags library
-const gremlin = require('@allingeek-gremlin/failure-flags');
+const gremlin = require('@gremlin/failure-flags');
 
 module.exports.handler = async (event) => {
   start = Date.now();
