@@ -11,7 +11,7 @@ const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, deb
 
   let experiment = null;
   try {
-    experiment = await fetchExperiment(name, labels);
+    experiment = await fetchExperiment(name, labels, debug);
   } catch(ignore) {
     if(debug) console.log('unable to fetch experiment', ignore);
     return false;

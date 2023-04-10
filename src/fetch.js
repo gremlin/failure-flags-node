@@ -1,37 +1,42 @@
 const { request } = require('http');
 
-const fetchExperiment = async (name, attributes, debug = false) => {
-  if(debug) console.log('fetch experiment for', name, attributes);
+const fetchExperiment = async (name, labels = {}, debug = false) => {
+  if(debug) console.log('fetch experiment for', name, labels);
   return new Promise((resolve, reject) => {
+    // input validation
+    if(!name) {
+      reject(new Error('invalida failure-flag name'));
+    }
     const postData = JSON.stringify({
       'name': name,
-      'labels': attributes
+      'labels': labels
     })
     const req = request({
         hostname: 'localhost',
-	port: '5032',
-	path: '/experiment',
-	method: 'POST',
-	timeout: 1000,
-	headers: {
+        port: '5032',
+        path: '/experiment',
+        method: 'POST',
+        timeout: 1000,
+        headers: {
           'Content-Type': 'application/json',
-	  'Content-Length': Buffer.byteLength(postData)
-	}
+          'Content-Length': Buffer.byteLength(postData)
+        }
       }, (res) => {
-        if (res.statusCode < 200 || res.statusCode > 299) {
-          return reject(new Error(`HTTP status code ${res.statusCode}`));
-	}
         const body = [];
         res.on('data', (chunk) => body.push(chunk));
         res.on('end', () => {
           const out = Buffer.concat(body).toString();
-          try {
-            resolve(JSON.parse(out));
-	  } catch(ignore) {
-            resolve(null);
+          if (res.statusCode < 200 || res.statusCode > 299) {
+            return reject(new Error(`HTTP status code: ${res.statusCode}, message: ${res.statusMessage}, body: ${out}`));
+          } else {
+            try {
+              resolve(JSON.parse(out));
+            } catch(ignore) {
+              resolve(null);
+            }
 	  }
-	})
-      })
+        });
+      });
     req.on('error', (err) => {
       reject(err);
     });

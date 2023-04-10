@@ -1,6 +1,6 @@
 # failure-flags
 
-Failure Flags is a node SDK for working with the Gremlin fault injection platform to build application-level chaos experiments and reliability tests. This library works in concert with Gremlin-Lambda, a Lambda extension, or Gremlin-Container a container sidecar agent. This architecture minimizes the impact to your application code, simplifies configuration, and makes adoption painless.
+Failure Flags is a node SDK for building application-level chaos experiments and reliability tests using the Gremlin Fault Injection platform. This library works in concert with Gremlin-Lambda, a Lambda Extension; or Gremlin-Sidecar, a container sidecar agent. This architecture minimizes the impact to your application code, simplifies configuration, and makes adoption painless.
 
 Just like feature flags, Failure Flags are safe to add to and leave in your application. Failure Flags will always fail safe if it cannot communicate with its sidecar or its sidecar is misconfigured.
 
