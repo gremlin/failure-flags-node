@@ -1,8 +1,6 @@
 const failureflags = require('./index.js');
 const express = require('express');
 
-class CustomError {}
-
 let requests = {
   custom: {
     name: "custom",
