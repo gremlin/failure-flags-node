@@ -135,8 +135,8 @@ This Effect will introduce between 2000 and 2200 milliseconds of latency where t
 ```json
 {
   "latency": {
-    ms: 2000,
-    jitter: 200
+    "ms": 2000,
+    "jitter": 200
   }
 }
 ```
@@ -193,7 +193,7 @@ If the `resultPrototype` property is set then you can use the `response` propert
 {
   "response": {
     "statusCode": 404,
-    "statusMessage: "Not Found"
+    "statusMessage": "Not Found"
   }
 }
 ```
