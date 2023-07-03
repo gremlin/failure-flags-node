@@ -15,11 +15,17 @@ const latency = async (experiment) => {
 const exception = (experiment) => {
   const effect = experiment.effect;
 
-  if(experiment && experiment.effect && effect.exception) 
-    if(experiment.effect.exception.message)
-      throw new Error(effect.exception.message);
-    else
-      throw new Error('Exception injected by Gremlin');
+  if(experiment && experiment.effect && effect.exception) {
+    const exception = effect.exception;
+
+    if (typeof exception === "string") {
+      throw new Error(exception);
+    } else if (typeof exception === "object") {
+      let toThrow = new Error('Exception injected by Failure Flags');
+      Object.assign(toThrow, exception)
+      throw toThrow;
+    }
+  }
 }
 
 function timeout(ms) {

@@ -101,6 +101,47 @@ let responses = {
       },
     }
   },
+  exceptionSupportsString: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      exception: "custom message"
+    }
+  },
+  exceptionSupportsExtraProperties: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      exception: {
+        extraProperty: "some extra value"
+      },
+    }
+  },
+  exceptionSupportsExtraPropertiesAndMessage: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      exception: {
+        message: "custom message",
+        extraProperty: "some extra value"
+      },
+    }
+  },
 };
 
 let mockServer = {};
@@ -143,7 +184,6 @@ test('ifExperimentActive does call callback', async () => {
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-
 test('ifExperimentActive default behavior is delayedException with default error message', async () => {
   try {
     await failureflags.ifExperimentActive({
@@ -153,9 +193,10 @@ test('ifExperimentActive default behavior is delayedException with default error
     expect(true).toBe(false); // always reject if this line is reached.
   } catch(e) {
     expect(e).not.toBeNull();
-    expect(e.message).toBe('Exception injected by Gremlin');
+    expect(e.message).toBe('Exception injected by Failure Flags');
   }
   expect(setTimeout).toHaveBeenCalledTimes(1);
+  expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 10);
 });
 
 test('ifExperimentActive default behavior is delayedException with custom error message', async () => {
@@ -190,6 +231,7 @@ test('latency supports number', async () => {
   await failureflags.ifExperimentActive({
       name: 'latencySupportsNumber', 
       labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.latency,
       debug: false});
 
   expect(setTimeout).toHaveBeenCalledTimes(1);
@@ -200,6 +242,7 @@ test('latency supports string', async () => {
   await failureflags.ifExperimentActive({
       name: 'latencySupportsString', 
       labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.latency,
       debug: false});
 
   expect(setTimeout).toHaveBeenCalledTimes(1);
@@ -210,10 +253,58 @@ test('latency supports object', async () => {
   await failureflags.ifExperimentActive({
       name: 'latencySupportsObject', 
       labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.latency,
       debug: false});
 
   expect(setTimeout).toHaveBeenCalledTimes(1);
   expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 13);
+});
+
+test('exception supports string', async () => {
+  try {
+    await failureflags.ifExperimentActive({
+      name: 'exceptionSupportsString', 
+      labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.exception, // explicitly test the exception effect, not default
+      debug: false});
+    expect(true).toBe(false); // always reject if this line is reached.
+  } catch(e) {
+    expect(e).not.toBeNull();
+    expect(e.message).toBe('custom message');
+  }
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('exception supports extra properties', async () => {
+  try {
+    await failureflags.ifExperimentActive({
+      name: 'exceptionSupportsExtraProperties', 
+      labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.exception, // explicitly test the exception effect, not default
+      debug: false});
+    expect(true).toBe(false); // always reject if this line is reached.
+  } catch(e) {
+    expect(e).not.toBeNull();
+    expect(e).toHaveProperty('message', 'Exception injected by Failure Flags');
+    expect(e).toHaveProperty('extraProperty', 'some extra value');
+  }
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('exception supports extra properties and custom message', async () => {
+  try {
+    await failureflags.ifExperimentActive({
+      name: 'exceptionSupportsExtraPropertiesAndMessage', 
+      labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.exception, // explicitly test the exception effect, not default
+      debug: false});
+    expect(true).toBe(false); // always reject if this line is reached.
+  } catch(e) {
+    expect(e).not.toBeNull();
+    expect(e).toHaveProperty('message', 'custom message');
+    expect(e).toHaveProperty('extraProperty', 'some extra value');
+  }
+  expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
 afterEach(() => {
