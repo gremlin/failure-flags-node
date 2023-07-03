@@ -1,31 +1,41 @@
 const latency = async (experiment) => {
-  const effect = experiment.effect;
+  if (!experiment.effect.latency)
+    return;
 
-  if(experiment && experiment.effect && effect.latency && effect.latency && typeof effect.latency === "number") {
-    await timeout(experiment.effect.latency);
-  } else if(experiment && experiment.effect && effect.latency && effect.latency && typeof effect.latency === "string") {
-    await timeout(parseInt(experiment.effect.latency, 10));
-  } else if(experiment && experiment.effect && effect.latency && effect.latency && typeof effect.latency === "object") {
-    let ms = (effect.latency.ms && typeof effect.latency.ms === "number")? effect.latency.ms : 0;
-    let jitter = (effect.latency.jitter && typeof effect.latency.jitter === "number")? effect.latency.jitter * Math.random() : 0;
+  const latency = experiment.effect.latency;
+  if(typeof latency === "number") {
+    await timeout(latency);
+  } else if(typeof latency === "string") {
+    await timeout(parseInt(latency, 10));
+  } else if(typeof latency === "object") {
+    let ms = (latency.ms && typeof latency.ms === "number")? latency.ms : 0;
+    let jitter = (latency.jitter && typeof latency.jitter === "number")? latency.jitter * Math.random() : 0;
     await timeout(ms + jitter);
   }
 }
 
 const exception = (experiment) => {
-  const effect = experiment.effect;
+  if (!experiment.effect.exception)
+    return;
 
-  if(experiment && experiment.effect && effect.exception) {
-    const exception = effect.exception;
-
-    if (typeof exception === "string") {
-      throw new Error(exception);
-    } else if (typeof exception === "object") {
-      let toThrow = new Error('Exception injected by Failure Flags');
-      Object.assign(toThrow, exception)
-      throw toThrow;
-    }
+  const exception = experiment.effect.exception;
+  if (typeof exception === "string") {
+    throw new Error(exception);
+  } else if (typeof exception === "object") {
+    let toThrow = new Error('Exception injected by Failure Flags');
+    Object.assign(toThrow, exception)
+    throw toThrow;
   }
+}
+
+const response = async (experiment, prototype) => {
+  if (!experiment.effect.response || typeof experiment.effect.response !== "object" || !prototype )
+    return;
+
+  const response = experiment.effect.response;
+  const res = Object.create(prototype);
+  Object.assign(res, response);
+  return res;
 }
 
 function timeout(ms) {
@@ -37,4 +47,10 @@ const delayedException = async (e) => {
   exception(e);
 }
 
-module.exports = exports = { latency, exception, delayedException };
+const delayedResponseOrException = async (e, responsePrototype) => {
+  await latency(e);
+  exception(e);
+  return response(e, responsePrototype);
+}
+
+module.exports = exports = { latency, exception, response, delayedException, delayedResponseOrException };
