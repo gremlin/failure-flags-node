@@ -21,7 +21,7 @@ let responses = {
       "b":"2"
     },
     effect: {
-      "latency-flat": "6000"
+      "latency-flat": "10"
     }
   },
   defaultBehavior: {
@@ -33,7 +33,7 @@ let responses = {
       "b":"2"
     },
     effect: {
-      "latency": "1000",
+      "latency": "10",
       "exception": {}
     }
   },
@@ -46,7 +46,7 @@ let responses = {
       "b":"2"
     },
     effect: {
-      "latency": "1000",
+      "latency": "10",
       "exception": { 'message': 'Custom message' }
     }
   },
@@ -59,9 +59,48 @@ let responses = {
       "b":"2"
     },
     effect: {
-      "latency": "500",
+      "latency": "50",
     }
-  }
+  },
+  latencySupportsNumber: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      latency: 11,
+    }
+  },
+  latencySupportsString: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      latency: "12",
+    }
+  },
+  latencySupportsObject: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehavior",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      latency: {
+        ms: 13,
+        jitter: 0
+      },
+    }
+  },
 };
 
 let mockServer = {};
@@ -76,12 +115,15 @@ beforeAll(() => {
   mockServer = app.listen('5032', 'localhost');
 });
 
+jest.spyOn(global, 'setTimeout');
+
 test('ifExperimentActive does nothing if callback is not a function', async () => {
   expect(await failureflags.ifExperimentActive({
     name: 'custom',
     labels: {a:'1',b:'2'},
     behavior: 'not a function',
    debug: false})).toBe(false);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
 test('ifExperimentActive does nothing if no experiment for failure flag', async () => {
@@ -90,6 +132,7 @@ test('ifExperimentActive does nothing if no experiment for failure flag', async 
     labels: {a:'1',b:'2'},
     behavior: ()=>{},
     debug: false})).toBe(false);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
 test('ifExperimentActive does call callback', async () => {
@@ -97,6 +140,7 @@ test('ifExperimentActive does call callback', async () => {
     name: 'custom',
     labels: {a:'1',b:'2'},
     behavior: (t)=>{ console.log('callback called', t); }})).toBe(true);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
 
@@ -111,6 +155,7 @@ test('ifExperimentActive default behavior is delayedException with default error
     expect(e).not.toBeNull();
     expect(e.message).toBe('Exception injected by Gremlin');
   }
+  expect(setTimeout).toHaveBeenCalledTimes(1);
 });
 
 test('ifExperimentActive default behavior is delayedException with custom error message', async () => {
@@ -124,6 +169,7 @@ test('ifExperimentActive default behavior is delayedException with custom error 
     expect(e).not.toBeNull();
     expect(e.message).toBe('Custom message');
   }
+  expect(setTimeout).toHaveBeenCalledTimes(1);
 });
 
 test('ifExperimentActive default behavior is delayedException with no exception', async () => {
@@ -135,6 +181,43 @@ test('ifExperimentActive default behavior is delayedException with no exception'
   } catch(e) {
     expect(true).toBe(false); // always reject if this line is reached.
   }
+  expect(setTimeout).toHaveBeenCalledTimes(1);
+});
+
+test('latency supports number', async () => {
+  jest.spyOn(global, 'setTimeout');
+
+  await failureflags.ifExperimentActive({
+      name: 'latencySupportsNumber', 
+      labels: {a:'1',b:'2'},
+      debug: false});
+
+  expect(setTimeout).toHaveBeenCalledTimes(1);
+  expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 11);
+});
+
+test('latency supports string', async () => {
+  await failureflags.ifExperimentActive({
+      name: 'latencySupportsString', 
+      labels: {a:'1',b:'2'},
+      debug: false});
+
+  expect(setTimeout).toHaveBeenCalledTimes(1);
+  expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 12);
+});
+
+test('latency supports object', async () => {
+  await failureflags.ifExperimentActive({
+      name: 'latencySupportsObject', 
+      labels: {a:'1',b:'2'},
+      debug: false});
+
+  expect(setTimeout).toHaveBeenCalledTimes(1);
+  expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 13);
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
 });
 
 afterAll(() => {
