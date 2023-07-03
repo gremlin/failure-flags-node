@@ -71,7 +71,7 @@ let responses = {
       "b":"2"
     },
     effect: {
-      latency: 11,
+      latency: 11
     }
   },
   latencySupportsString: {
@@ -83,7 +83,7 @@ let responses = {
       "b":"2"
     },
     effect: {
-      latency: "12",
+      latency: "12"
     }
   },
   latencySupportsObject: {
@@ -98,7 +98,7 @@ let responses = {
       latency: {
         ms: 13,
         jitter: 0
-      },
+      }
     }
   },
   exceptionSupportsString: {
@@ -142,6 +142,22 @@ let responses = {
       },
     }
   },
+  alteredResponseValue: {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "alteredResponseValue",
+    rate: "1",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      response: {
+        property2: "experiment value",
+        property3: "experiment originated",
+      }
+    }
+  },
+
 };
 
 let mockServer = {};
@@ -182,6 +198,15 @@ test('ifExperimentActive does call callback', async () => {
     labels: {a:'1',b:'2'},
     behavior: (t)=>{ console.log('callback called', t); }})).toBe(true);
   expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('around / instead example', async () => {
+  if (!await failureflags.ifExperimentActive({name:'custom'})) {
+    expect(true).toBe(false); // always reject if this line is reached.
+  }
+  if (await failureflags.ifExperimentActive({name:'defaultBehaviorWithNoException'}) === true) {
+    expect(setTimeout).toHaveBeenCalledTimes(1);
+  }
 });
 
 test('ifExperimentActive default behavior is delayedException with default error message', async () => {
@@ -226,8 +251,6 @@ test('ifExperimentActive default behavior is delayedException with no exception'
 });
 
 test('latency supports number', async () => {
-  jest.spyOn(global, 'setTimeout');
-
   await failureflags.ifExperimentActive({
       name: 'latencySupportsNumber', 
       labels: {a:'1',b:'2'},
@@ -305,6 +328,39 @@ test('exception supports extra properties and custom message', async () => {
     expect(e).toHaveProperty('extraProperty', 'some extra value');
   }
   expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('ifExperimentActive true if prototype response unset', async () => {
+  try {
+    const response = await failureflags.ifExperimentActive({
+      name: 'defaultBehaviorWithNoException',
+      labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.response, // explicitly test the exception effect, not default
+      debug: false});
+    expect(response).toBe(true);
+  } catch(e) {
+    expect(true).toBe(false); // always reject if this line is reached.
+  }
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('ifExperimentActive returns derrived if prototype response set', async () => {
+  let response;
+  try {
+    response = await failureflags.ifExperimentActive({
+      name: 'alteredResponseValue',
+      labels: {a:'1',b:'2'},
+      behavior: failureflags.effect.response, // explicitly test the exception effect, not default
+      resultPrototype: {property1: 'prototype value', property2: 'prototype value'},
+      debug: false});
+  } catch(e) {
+    console.dir(e);
+    expect(true).toBe(false); // always reject if this line is reached.
+  }
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+  expect(response).toHaveProperty('property1', 'prototype value');
+  expect(response).toHaveProperty('property2', 'experiment value');
+  expect(response).toHaveProperty('property3', 'experiment originated');
 });
 
 afterEach(() => {
