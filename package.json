@@ -18,7 +18,7 @@
     "serverless"
   ],
   "author": "Jeff Nickoloff <jeff.nickoloff@gremlin.com>",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/gremlin/failure-flags-node/issues"
   },
