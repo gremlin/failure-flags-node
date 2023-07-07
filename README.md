@@ -174,31 +174,34 @@ This Effect Statement will cause a Failure Flag to pause for a full 2 seconds be
 }
 ```
 
-### Advanced: Changing Response Values
+### Advanced: Changing Application Data
 
-Suppose you want to be able to experiment with mangled responses from your application's dependencies. You can do that with a little extra work. You need to provide a prototype response in your call to `ifExperimentActive`.
+Suppose you want to be able to experiment with mangled data. This might include responses from your application's dependencies. You can do that with a little extra work. You need to provide prototype data in your call to `ifExperimentActive`.
 
 ```js
 ...
-let response = await failureflags.ifExperimentActive({
-  name: 'flagname',                 // the name of your failure flag
-  labels: {},                       // additional attibutes about this invocation
-  resultPrototype: {name: 'HTTPResponse'}); // this prototype only sets the name of the response type
+let myData = {name: 'HTTPResponse'}; // this is just example data, it could be anything
+
+myData = await failureflags.ifExperimentActive({
+  name: 'flagname',       // the name of your failure flag
+  labels: {},             // additional attibutes about this invocation
+  dataPrototype: myData); // "myData" is some variable like a request or response
+                          // You could also pass in an object literal.
 ...
 ```
 
-If the `resultPrototype` property is set then you can use the `response` property in the Effect statement:
+If the `dataPrototype` property is set then you can use the `data` property in the Effect statement:
 
 ```json
 {
-  "response": {
+  "data": {
     "statusCode": 404,
     "statusMessage": "Not Found"
   }
 }
 ```
 
-Any properties in the `response` object in this map will be copied into a new object created from the prototype you provided. In this example, if the experiment is not running then the `resposne` value will be false, and if it is running the `resposne` variable would contain the following object: 
+Any properties in the `data` object in this map will be copied into a new object created from the prototype you provided. In this example, if the experiment is not running then `myData` will be returned unaltered, and if it is running it would have been altered to the following: 
 
 ```json
 {
