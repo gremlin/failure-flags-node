@@ -15,13 +15,13 @@ limitations under the License.
 */
 const { fetchExperiment } = require('./src/fetch.js');
 const effect = require('./src/fault.js');
-const defaultBehavior = effect.delayedResponseOrException;
+const defaultBehavior = effect.delayedDataOrException;
 
-const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, resultPrototype = null, debug = false}) => {
-  if(debug) console.log('ifExperimentActive', name, labels);
+const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, dataPrototype = null, debug = false}) => {
+  if(debug) console.log('ifExperimentActive', name, labels, dataPrototype);
   if (typeof behavior != 'function') {
     if(debug) console.log('behavior is not a function');
-    return false;
+    return resolveOrFalse(debug, dataPrototype);
   }
 
   let experiment = null;
@@ -29,12 +29,12 @@ const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, res
     experiment = await fetchExperiment(name, labels, debug);
   } catch(ignore) {
     if(debug) console.log('unable to fetch experiment', ignore);
-    return false;
+    return resolveOrFalse(debug, dataPrototype);
   }
 
   if(experiment == null) {
     if(debug) console.log('no experiment for', name, labels);
-    return false;
+    return resolveOrFalse(debug, dataPrototype);
   }
 
   if(debug) console.log('fetched experiment', experiment);
@@ -46,20 +46,26 @@ const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, res
       experiment.rate <= 1 &&
       dice > experiment.rate) {
     if(debug) console.log('probablistically skipped', behaviorError)
-    return false;
+    return resolveOrFalse(debug, dataPrototype);
   }
     
   try {
-    if (resultPrototype) {
-     return await behavior(experiment, resultPrototype);
-   } else {
-     await behavior(experiment);
-     return true;
-   }
+    if (dataPrototype) {
+      return await behavior(experiment, dataPrototype);
+    } else {
+      await behavior(experiment);
+      return true;
+    }
   } catch(behaviorError) {
     if(debug) console.log('provided behavior error', behaviorError)
     throw behaviorError;
   }
+}
+
+const resolveOrFalse = (debug, dataPrototype) => {
+  let value = dataPrototype? dataPrototype : false;
+  if(debug) console.log('returning', value);
+  return value;
 }
 
 module.exports = exports = { ifExperimentActive, fetchExperiment, effect, defaultBehavior };

@@ -166,7 +166,7 @@ let responses = {
       "b":"2"
     },
     effect: {
-      response: {
+      data: {
         property2: "experiment value",
         property3: "experiment originated",
       }
@@ -345,28 +345,48 @@ test('exception supports extra properties and custom message', async () => {
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive true if prototype response unset', async () => {
+test('ifExperimentActive true if dataPrototype unset and experiment active', async () => {
   try {
     const response = await failureflags.ifExperimentActive({
       name: 'defaultBehaviorWithNoException',
       labels: {a:'1',b:'2'},
-      behavior: failureflags.effect.response, // explicitly test the exception effect, not default
+      behavior: failureflags.effect.data, // explicitly test the exception effect, not default
       debug: false});
     expect(response).toBe(true);
   } catch(e) {
     expect(true).toBe(false); // always reject if this line is reached.
   }
+  // the 'response' behavior does not use setTimeout
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive returns derrived if prototype response set', async () => {
-  let response;
+test('ifExperimentActive returns derrived if dataPrototype set and experiment active', async () => {
+  let data = { property1: 'prototype value', property2: 'prototype value' };
   try {
-    response = await failureflags.ifExperimentActive({
+    data = await failureflags.ifExperimentActive({
       name: 'alteredResponseValue',
       labels: {a:'1',b:'2'},
-      behavior: failureflags.effect.response, // explicitly test the exception effect, not default
-      resultPrototype: {property1: 'prototype value', property2: 'prototype value'},
+      behavior: failureflags.effect.data, // explicitly test the exception effect, not default
+      dataPrototype: data,
+      debug: false});
+  } catch(e) {
+    console.dir(e);
+    expect(true).toBe(false); // always reject if this line is reached.
+  }
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+  expect(data).toHaveProperty('property1', 'prototype value');
+  expect(data).toHaveProperty('property2', 'experiment value');
+  expect(data).toHaveProperty('property3', 'experiment originated');
+});
+
+test('ifExperimentActive returns dataPrototype if dataPrototype is set and no experiment active', async () => {
+  let response = {property1: "prototype value"};
+  try {
+    response = await failureflags.ifExperimentActive({
+      name: 'doesnotexist',
+      labels: {a:'1',b:'2'},
+      behavior: (experiment) => { return false; }, // explicitly destroy the prototype
+      dataPrototype: {property1: 'prototype value', property2: 'prototype value'},
       debug: false});
   } catch(e) {
     console.dir(e);
@@ -374,8 +394,6 @@ test('ifExperimentActive returns derrived if prototype response set', async () =
   }
   expect(setTimeout).toHaveBeenCalledTimes(0);
   expect(response).toHaveProperty('property1', 'prototype value');
-  expect(response).toHaveProperty('property2', 'experiment value');
-  expect(response).toHaveProperty('property3', 'experiment originated');
 });
 
 afterEach(() => {

@@ -43,13 +43,15 @@ const exception = (experiment) => {
   }
 }
 
-const response = async (experiment, prototype) => {
-  if (!experiment.effect.response || typeof experiment.effect.response !== "object" || !prototype )
-    return;
+const data = async (experiment, prototype) => {
+  if (!experiment.effect.data || typeof experiment.effect.data !== "object")
+    return prototype;
 
-  const response = experiment.effect.response;
-  const res = Object.create(prototype);
-  Object.assign(res, response);
+  let toUse = prototype? prototype : {};
+
+  const data = experiment.effect.data;
+  const res = Object.create(toUse);
+  Object.assign(res, data);
   return res;
 }
 
@@ -62,10 +64,10 @@ const delayedException = async (e) => {
   exception(e);
 }
 
-const delayedResponseOrException = async (e, responsePrototype) => {
+const delayedDataOrException = async (e, dataPrototype) => {
   await latency(e);
   exception(e);
-  return response(e, responsePrototype);
+  return data(e, dataPrototype);
 }
 
-module.exports = exports = { latency, exception, response, delayedException, delayedResponseOrException };
+module.exports = exports = { latency, exception, data, delayedException, delayedDataOrException };
