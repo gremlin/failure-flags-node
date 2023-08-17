@@ -61,6 +61,8 @@ module.exports.handler = async (event) => {
 };
 ```
 
+*Don't forget to enable the SDK by setting the FAILURE_FLAGS_ENABLED environment variable!* If this environment variable is not set then the SDK will short-circuit and no attempt to fetch experiments will be made.
+
 You can always bring your own behaviors and effects by providing a behavior function. Here's another Lambda example that writes the experiment data to the console instead of changing the application behavior:
 
 ```js
