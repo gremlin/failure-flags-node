@@ -14,13 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const { request } = require('http');
+var pjson = require('../package.json');
 
 const fetchExperiment = async (name, labels = {}, debug = false) => {
+  labels["failure-flags-sdk-version"] = pjson.version;
+
   if(debug) console.log('fetch experiment for', name, labels);
+
   return new Promise((resolve, reject) => {
+    if(!process.env.FAILURE_FLAGS_ENABLED) {
+      reject(new Error('failure flags is not enabled'));
+      return
+    }
     // input validation
     if(!name) {
-      reject(new Error('invalida failure-flag name'));
+      reject(new Error('invalid failure-flag name'));
+      return
     }
     const postData = JSON.stringify({
       'name': name,
@@ -45,7 +54,8 @@ const fetchExperiment = async (name, labels = {}, debug = false) => {
             return reject(new Error(`HTTP status code: ${res.statusCode}, message: ${res.statusMessage}, body: ${out}`));
           } else {
             try {
-              resolve(JSON.parse(out));
+              const rawResult = JSON.parse(out);
+              resolve(rawResult);
             } catch(ignore) {
               resolve(null);
             }

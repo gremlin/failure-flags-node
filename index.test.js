@@ -39,6 +39,19 @@ let responses = {
       "latency-flat": "10"
     }
   },
+  defaultList: [{
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultList",
+    rate: "0.5",
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      "latency": "10",
+      "exception": {}
+    }
+  }],
   defaultBehavior: {
     guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
     failureFlagName: "defaultBehavior",
@@ -178,6 +191,9 @@ let responses = {
 let mockServer = {};
 
 beforeAll(() => {
+  // enable failure flags
+  process.env.FAILURE_FLAGS_ENABLED = "true"
+
   // setup simple express server to serve a mock gremlin-lambda service
   const app = express();
   app.use(express.json());
@@ -186,6 +202,10 @@ beforeAll(() => {
   });
   mockServer = app.listen('5032', 'localhost');
 });
+
+afterEach(() => {
+  process.env.FAILURE_FLAGS_ENABLED = "true"
+})
 
 jest.spyOn(global, 'setTimeout');
 
@@ -212,6 +232,14 @@ test('ifExperimentActive does call callback', async () => {
     name: 'custom',
     labels: {a:'1',b:'2'},
     behavior: (t)=>{ console.log('callback called', t); }})).toBe(true);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('ifExperimentActive does nothing if FAILURE_FLAGS_ENABLED is not truthy', async () => {
+  delete process.env.FAILURE_FLAGS_ENABLED
+  expect(await failureflags.ifExperimentActive({
+    name: 'custom',
+    labels: {a:'1',b:'2'}})).toBe(false);
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
