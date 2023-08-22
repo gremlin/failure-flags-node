@@ -65,6 +65,30 @@ let responses = {
       "exception": {}
     }
   },
+  defaultBehaviorZeroRate: [{
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehaviorZeroRate",
+    rate: 0,
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      "latency": "10",
+      "exception": {}
+    }
+  },{
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "defaultBehaviorZeroRate",
+    rate: 0,
+    selector: {
+      "a":"1",
+      "b":"2"
+    },
+    effect: {
+      "latency": "20"
+    }
+  }],
   defaultBehaviorWithMessage: {
     guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
     failureFlagName: "defaultBehavior",
@@ -90,7 +114,7 @@ let responses = {
       "latency": "50",
     }
   },
-  latencySupportsNumber: {
+  latencySupportsNumber: [{
     guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
     failureFlagName: "defaultBehavior",
     rate: "1",
@@ -101,7 +125,7 @@ let responses = {
     effect: {
       latency: 11
     }
-  },
+  }],
   latencySupportsString: {
     guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
     failureFlagName: "defaultBehavior",
@@ -214,7 +238,7 @@ test('ifExperimentActive does nothing if callback is not a function', async () =
     name: 'custom',
     labels: {a:'1',b:'2'},
     behavior: 'not a function',
-   debug: false})).toBe(false);
+    debug: false})).toBe(false);
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
@@ -240,6 +264,18 @@ test('ifExperimentActive does nothing if FAILURE_FLAGS_ENABLED is not truthy', a
   expect(await failureflags.ifExperimentActive({
     name: 'custom',
     labels: {a:'1',b:'2'}})).toBe(false);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('ifExperimentActive does nothing if all experiments probablistically skipped', async () => {
+  try {
+  expect(await failureflags.ifExperimentActive({
+    name: 'defaultBehaviorZeroRate',
+    labels: {a:'1',b:'2'},
+    debug: false})).toBe(true);
+  } catch(e) {
+    expect(true).toBe(false);
+  }
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
