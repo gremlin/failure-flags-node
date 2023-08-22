@@ -24,36 +24,41 @@ const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, dat
     return resolveOrFalse(debug, dataPrototype);
   }
 
-  let experiment = null;
+  let experiments = null;
   try {
-    experiment = await fetchExperiment(name, labels, debug);
+    experiments = await fetchExperiment(name, labels, debug);
   } catch(ignore) {
-    if(debug) console.log('unable to fetch experiment', ignore);
+    if(debug) console.log('unable to fetch experiments', ignore);
     return resolveOrFalse(debug, dataPrototype);
   }
 
-  if(experiment == null) {
-    if(debug) console.log('no experiment for', name, labels);
+  if(experiments == null) {
+    if(debug) console.log('no experiments for', name, labels);
     return resolveOrFalse(debug, dataPrototype);
   }
+  if(!Array.isArray(experiments)) {
+    experiments = [experiments]
+  }
 
-  if(debug) console.log('fetched experiment', experiment);
+  if(debug) console.log('fetched experiments: ', experiments);
   const dice = Math.random();
-  if(experiment.rate &&
-      typeof experiment.rate != "string" &&
-      !isNaN(experiment.rate) &&
-      experiment.rate >= 0 &&
-      experiment.rate <= 1 &&
-      dice > experiment.rate) {
-    if(debug) console.log('probablistically skipped', behaviorError)
-    return resolveOrFalse(debug, dataPrototype);
-  }
-    
+  filteredExperiments = experiments.filter((experiment) => {
+    if(typeof experiment.rate == "number" &&
+        !isNaN(experiment.rate) &&
+        experiment.rate >= 0 &&
+        experiment.rate <= 1 &&
+        dice > experiment.rate) {
+      return false;
+    }
+    return true;
+  });
+  if(debug) console.log('filtered experiments: ', filteredExperiments);
+
   try {
     if (dataPrototype) {
-      return await behavior(experiment, dataPrototype);
+      return await behavior(filteredExperiments, dataPrototype);
     } else {
-      await behavior(experiment);
+      await behavior(filteredExperiments);
       return true;
     }
   } catch(behaviorError) {

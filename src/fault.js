@@ -13,46 +13,54 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const latency = async (experiment) => {
-  if (!experiment.effect.latency)
-    return;
+const latency = async (experiments) => {
+  for (let i = 0; i < experiments.length; ++i) {
+    let experiment = experiments[i];
+    if (!experiment.effect || !experiment.effect.latency) 
+      continue;
 
-  const latency = experiment.effect.latency;
-  if(typeof latency === "number") {
-    await timeout(latency);
-  } else if(typeof latency === "string") {
-    await timeout(parseInt(latency, 10));
-  } else if(typeof latency === "object") {
-    let ms = (latency.ms && typeof latency.ms === "number")? latency.ms : 0;
-    let jitter = (latency.jitter && typeof latency.jitter === "number")? latency.jitter * Math.random() : 0;
-    await timeout(ms + jitter);
+    const latency = experiment.effect.latency;
+    if(typeof latency === "number") {
+      await timeout(latency);
+    } else if(typeof latency === "string") {
+      await timeout(parseInt(latency, 10));
+    } else if(typeof latency === "object") {
+      let ms = (latency.ms && typeof latency.ms === "number")? latency.ms : 0;
+      let jitter = (latency.jitter && typeof latency.jitter === "number")? latency.jitter * Math.random() : 0;
+      await timeout(ms + jitter);
+    }
   }
 }
 
-const exception = (experiment) => {
-  if (!experiment.effect.exception)
-    return;
+const exception = (experiments) => {
+  for (let i = 0; i < experiments.length; ++i) {
+    let experiment = experiments[i];
+    if (!experiment.effect || !experiment.effect.exception)
+      continue;
 
-  const exception = experiment.effect.exception;
-  if (typeof exception === "string") {
-    throw new Error(exception);
-  } else if (typeof exception === "object") {
-    let toThrow = new Error('Exception injected by Failure Flags');
-    Object.assign(toThrow, exception)
-    throw toThrow;
+    const exception = experiment.effect.exception;
+    if (typeof exception === "string") {
+      throw new Error(exception);
+    } else if (typeof exception === "object") {
+      let toThrow = new Error('Exception injected by Failure Flags');
+      Object.assign(toThrow, exception)
+      throw toThrow;
+    }
   }
 }
 
-const data = async (experiment, prototype) => {
-  if (!experiment.effect.data || typeof experiment.effect.data !== "object")
-    return prototype;
-
+const data = async (experiments, prototype) => {
   let toUse = prototype? prototype : {};
+  for (let i = 0; i < experiments.length; ++i) {
+    let experiment = experiments[i];
+    if (!experiment.effect || !experiment.effect.data || typeof experiment.effect.data !== "object")
+      continue;
 
-  const data = experiment.effect.data;
-  const res = Object.create(toUse);
-  Object.assign(res, data);
-  return res;
+    const data = experiment.effect.data;
+    const res = Object.create(toUse);
+    Object.assign(res, data);
+    return res;
+  }
 }
 
 function timeout(ms) {
