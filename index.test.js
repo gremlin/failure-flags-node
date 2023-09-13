@@ -233,8 +233,8 @@ afterEach(() => {
 
 jest.spyOn(global, 'setTimeout');
 
-test('ifExperimentActive does nothing if callback is not a function', async () => {
-  expect(await failureflags.ifExperimentActive({
+test('invokeFailureFlag does nothing if callback is not a function', async () => {
+  expect(await failureflags.invokeFailureFlag({
     name: 'custom',
     labels: {a:'1',b:'2'},
     behavior: 'not a function',
@@ -242,8 +242,8 @@ test('ifExperimentActive does nothing if callback is not a function', async () =
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive does nothing if no experiment for failure flag', async () => {
-  expect(await failureflags.ifExperimentActive({
+test('invokeFailureFlag does nothing if no experiment for failure flag', async () => {
+  expect(await failureflags.invokeFailureFlag({
     name: 'doesnotexist',
     labels: {a:'1',b:'2'},
     behavior: ()=>{},
@@ -251,25 +251,25 @@ test('ifExperimentActive does nothing if no experiment for failure flag', async 
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive does call callback', async () => {
-  expect(await failureflags.ifExperimentActive({
+test('invokeFailureFlag does call callback', async () => {
+  expect(await failureflags.invokeFailureFlag({
     name: 'custom',
     labels: {a:'1',b:'2'},
     behavior: (t)=>{ console.log('callback called', t); }})).toBe(true);
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive does nothing if FAILURE_FLAGS_ENABLED is not truthy', async () => {
+test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is not truthy', async () => {
   delete process.env.FAILURE_FLAGS_ENABLED
-  expect(await failureflags.ifExperimentActive({
+  expect(await failureflags.invokeFailureFlag({
     name: 'custom',
     labels: {a:'1',b:'2'}})).toBe(false);
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive does nothing if all experiments probablistically skipped', async () => {
+test('invokeFailureFlag does nothing if all experiments probablistically skipped', async () => {
   try {
-  expect(await failureflags.ifExperimentActive({
+  expect(await failureflags.invokeFailureFlag({
     name: 'defaultBehaviorZeroRate',
     labels: {a:'1',b:'2'},
     debug: false})).toBe(true);
@@ -280,17 +280,17 @@ test('ifExperimentActive does nothing if all experiments probablistically skippe
 });
 
 test('around / instead example', async () => {
-  if (!await failureflags.ifExperimentActive({name:'custom'})) {
+  if (!await failureflags.invokeFailureFlag({name:'custom'})) {
     expect(true).toBe(false); // always reject if this line is reached.
   }
-  if (await failureflags.ifExperimentActive({name:'defaultBehaviorWithNoException'}) === true) {
+  if (await failureflags.invokeFailureFlag({name:'defaultBehaviorWithNoException'}) === true) {
     expect(setTimeout).toHaveBeenCalledTimes(1);
   }
 });
 
-test('ifExperimentActive default behavior is delayedException with default error message', async () => {
+test('invokeFailureFlag default behavior is delayedException with default error message', async () => {
   try {
-    await failureflags.ifExperimentActive({
+    await failureflags.invokeFailureFlag({
       name: 'defaultBehavior', 
       labels: {a:'1',b:'2'},
       debug: false});
@@ -303,9 +303,9 @@ test('ifExperimentActive default behavior is delayedException with default error
   expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 10);
 });
 
-test('ifExperimentActive default behavior is delayedException with custom error message', async () => {
+test('invokeFailureFlag default behavior is delayedException with custom error message', async () => {
   try {
-    await failureflags.ifExperimentActive({
+    await failureflags.invokeFailureFlag({
       name: 'defaultBehaviorWithMessage', 
       labels: {a:'1',b:'2'},
       debug: false});
@@ -317,9 +317,9 @@ test('ifExperimentActive default behavior is delayedException with custom error 
   expect(setTimeout).toHaveBeenCalledTimes(1);
 });
 
-test('ifExperimentActive default behavior is delayedException with no exception', async () => {
+test('invokeFailureFlag default behavior is delayedException with no exception', async () => {
   try {
-    await failureflags.ifExperimentActive({
+    await failureflags.invokeFailureFlag({
       name: 'defaultBehaviorWithNoException', 
       labels: {a:'1',b:'2'},
       debug: false});
@@ -330,7 +330,7 @@ test('ifExperimentActive default behavior is delayedException with no exception'
 });
 
 test('latency supports number', async () => {
-  await failureflags.ifExperimentActive({
+  await failureflags.invokeFailureFlag({
       name: 'latencySupportsNumber', 
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.latency,
@@ -341,7 +341,7 @@ test('latency supports number', async () => {
 });
 
 test('latency supports string', async () => {
-  await failureflags.ifExperimentActive({
+  await failureflags.invokeFailureFlag({
       name: 'latencySupportsString', 
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.latency,
@@ -352,7 +352,7 @@ test('latency supports string', async () => {
 });
 
 test('latency supports object', async () => {
-  await failureflags.ifExperimentActive({
+  await failureflags.invokeFailureFlag({
       name: 'latencySupportsObject', 
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.latency,
@@ -364,7 +364,7 @@ test('latency supports object', async () => {
 
 test('exception supports string', async () => {
   try {
-    await failureflags.ifExperimentActive({
+    await failureflags.invokeFailureFlag({
       name: 'exceptionSupportsString', 
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.exception, // explicitly test the exception effect, not default
@@ -379,7 +379,7 @@ test('exception supports string', async () => {
 
 test('exception supports extra properties', async () => {
   try {
-    await failureflags.ifExperimentActive({
+    await failureflags.invokeFailureFlag({
       name: 'exceptionSupportsExtraProperties', 
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.exception, // explicitly test the exception effect, not default
@@ -395,7 +395,7 @@ test('exception supports extra properties', async () => {
 
 test('exception supports extra properties and custom message', async () => {
   try {
-    await failureflags.ifExperimentActive({
+    await failureflags.invokeFailureFlag({
       name: 'exceptionSupportsExtraPropertiesAndMessage', 
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.exception, // explicitly test the exception effect, not default
@@ -409,9 +409,9 @@ test('exception supports extra properties and custom message', async () => {
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive true if dataPrototype unset and experiment active', async () => {
+test('invokeFailureFlag true if dataPrototype unset and experiment active', async () => {
   try {
-    const response = await failureflags.ifExperimentActive({
+    const response = await failureflags.invokeFailureFlag({
       name: 'defaultBehaviorWithNoException',
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.data, // explicitly test the exception effect, not default
@@ -424,10 +424,10 @@ test('ifExperimentActive true if dataPrototype unset and experiment active', asy
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('ifExperimentActive returns derrived if dataPrototype set and experiment active', async () => {
+test('invokeFailureFlag returns derrived if dataPrototype set and experiment active', async () => {
   let data = { property1: 'prototype value', property2: 'prototype value' };
   try {
-    data = await failureflags.ifExperimentActive({
+    data = await failureflags.invokeFailureFlag({
       name: 'alteredResponseValue',
       labels: {a:'1',b:'2'},
       behavior: failureflags.effect.data, // explicitly test the exception effect, not default
@@ -443,10 +443,10 @@ test('ifExperimentActive returns derrived if dataPrototype set and experiment ac
   expect(data).toHaveProperty('property3', 'experiment originated');
 });
 
-test('ifExperimentActive returns dataPrototype if dataPrototype is set and no experiment active', async () => {
+test('invokeFailureFlag returns dataPrototype if dataPrototype is set and no experiment active', async () => {
   let response = {property1: "prototype value"};
   try {
-    response = await failureflags.ifExperimentActive({
+    response = await failureflags.invokeFailureFlag({
       name: 'doesnotexist',
       labels: {a:'1',b:'2'},
       behavior: (experiment) => { return false; }, // explicitly destroy the prototype

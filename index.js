@@ -17,8 +17,8 @@ const { fetchExperiment } = require('./src/fetch.js');
 const effect = require('./src/fault.js');
 const defaultBehavior = effect.delayedDataOrException;
 
-const ifExperimentActive = async ({name, labels, behavior = defaultBehavior, dataPrototype = null, debug = false}) => {
-  if(debug) console.log('ifExperimentActive', name, labels, dataPrototype);
+const invokeFailureFlag = async ({name, labels, behavior = defaultBehavior, dataPrototype = null, debug = false}) => {
+  if(debug) console.log('invokeFailureFlag', name, labels, dataPrototype);
   if (typeof behavior != 'function') {
     if(debug) console.log('behavior is not a function');
     return resolveOrFalse(debug, dataPrototype);
@@ -73,4 +73,4 @@ const resolveOrFalse = (debug, dataPrototype) => {
   return value;
 }
 
-module.exports = exports = { ifExperimentActive, fetchExperiment, effect, defaultBehavior };
+module.exports = exports = { invokeFailureFlag, fetchExperiment, effect, defaultBehavior };
