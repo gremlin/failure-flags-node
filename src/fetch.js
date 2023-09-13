@@ -17,7 +17,7 @@ const { request } = require('http');
 var pjson = require('../package.json');
 
 const fetchExperiment = async (name, labels = {}, debug = false) => {
-  labels["failure-flags-sdk-version"] = pjson.version;
+  labels["failure-flags-sdk-version"] = "node-v" + pjson.version;
 
   if(debug) console.log('fetch experiment for', name, labels);
 
