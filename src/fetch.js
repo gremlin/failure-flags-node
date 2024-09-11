@@ -22,7 +22,7 @@ const fetchExperiment = async (name, labels = {}, debug = false) => {
   if(debug) console.log('fetch experiment for', name, labels);
 
   return new Promise((resolve, reject) => {
-    if(!process.env.FAILURE_FLAGS_ENABLED) {
+    if(!process.env.FAILURE_FLAGS_ENABLED || !(process.env.FAILURE_FLAGS_ENABLED === "true" || process.env.FAILURE_FLAGS_ENABLED === "1")) {
       reject(new Error('failure flags is not enabled'));
       return
     }

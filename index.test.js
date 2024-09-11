@@ -259,8 +259,32 @@ test('invokeFailureFlag does call callback', async () => {
   expect(setTimeout).toHaveBeenCalledTimes(0);
 });
 
-test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is not truthy', async () => {
+test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is not set', async () => {
   delete process.env.FAILURE_FLAGS_ENABLED
+  expect(await failureflags.invokeFailureFlag({
+    name: 'custom',
+    labels: {a:'1',b:'2'}})).toBe(false);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is "0"', async () => {
+  process.env.FAILURE_FLAGS_ENABLED = "0"
+  expect(await failureflags.invokeFailureFlag({
+    name: 'custom',
+    labels: {a:'1',b:'2'}})).toBe(false);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is "hello"', async () => {
+  process.env.FAILURE_FLAGS_ENABLED = "hello"
+  expect(await failureflags.invokeFailureFlag({
+    name: 'custom',
+    labels: {a:'1',b:'2'}})).toBe(false);
+  expect(setTimeout).toHaveBeenCalledTimes(0);
+});
+
+test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is ""', async () => {
+  process.env.FAILURE_FLAGS_ENABLED = ""
   expect(await failureflags.invokeFailureFlag({
     name: 'custom',
     labels: {a:'1',b:'2'}})).toBe(false);

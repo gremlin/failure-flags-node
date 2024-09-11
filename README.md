@@ -63,7 +63,7 @@ module.exports.handler = async (event) => {
 
 ## Enabling the SDK in your Environment
 
-*Don't forget to enable the SDK by setting the FAILURE_FLAGS_ENABLED environment variable!* If this environment variable is not set then the SDK will short-circuit and no attempt to fetch experiments will be made.
+*Don't forget to enable the SDK by setting the FAILURE_FLAGS_ENABLED environment variable!* If this environment variable is not set then the SDK will short-circuit and no attempt to fetch experiments will be made. The variable must be set to either `true` or `1`.
 
 ## Extensibility
 
