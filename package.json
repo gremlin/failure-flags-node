@@ -1,6 +1,6 @@
 {
   "name": "@gremlin/failure-flags",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Failure Flags is a node SDK for working with the Gremlin fault injection platform to build application-level chaos experiments and reliability tests. This library works in concert with Gremlin-Lambda, a Lambda extension, or Gremlin-Container a container sidecar agent. This architecture minimizes the impact to your application code, simplifies configuration, and makes adoption painless.",
   "main": "index.js",
   "scripts": {
