@@ -24,3 +24,8 @@ set-version:
 
 publish:
 	npm publish --access public
+
+# CircleCI's Trusted Publisher is currently scoped to stage-only publishes
+# (npm stage publish), not live npm publish. Use this until that changes.
+stage-publish:
+	npm stage publish --access public
