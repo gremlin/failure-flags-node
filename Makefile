@@ -17,8 +17,10 @@ test:
 	npm run test
 
 .PHONY:
-release-patch:
-	npm version patch --git-tag-version
+# Sets package.json's version from the pushed release tag (e.g. VERSION=v1.2.3 or 1.2.3).
+# The committed version field is a placeholder only - the git tag is authoritative.
+set-version:
+	npm version "$(patsubst v%,%,$(VERSION))" --no-git-tag-version --allow-same-version
 
 publish:
 	npm publish --access public
