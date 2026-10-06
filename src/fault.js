@@ -58,11 +58,10 @@ const data = async (experiments, prototype) => {
     if (!experiment.effect || !experiment.effect.data || typeof experiment.effect.data !== "object")
       continue;
 
-    const data = experiment.effect.data;
-    const res = Object.create(toUse);
-    Object.assign(res, data);
-    return res;
+    // Copy own fields so the result serializes, but keep the prototype's class/methods
+    return Object.assign(Object.create(Object.getPrototypeOf(toUse)), toUse, experiment.effect.data);
   }
+  return toUse;
 }
 
 function timeout(ms) {

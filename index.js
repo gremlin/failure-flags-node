@@ -45,6 +45,9 @@ const invokeFailureFlag = async ({name, labels, behavior = defaultBehavior, data
   if(debug) console.log('fetched experiments: ', experiments);
   const dice = Math.random();
   const filteredExperiments = experiments.filter((experiment) => {
+    if(experiment == null || typeof experiment != "object") {
+      return false;
+    }
     if(typeof experiment.rate == "number" &&
         !isNaN(experiment.rate) &&
         experiment.rate >= 0 &&
