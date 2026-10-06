@@ -13,16 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+'use strict';
+
 const { request } = require('http');
 var pjson = require('../package.json');
 
 const fetchExperiment = async (name, labels = {}, debug = false) => {
-  labels["failure-flags-sdk-version"] = "node-v" + pjson.version;
+  labels = { ...labels, "failure-flags-sdk-version": "node-v" + pjson.version };
 
   if(debug) console.log('fetch experiment for', name, labels);
 
   return new Promise((resolve, reject) => {
-    if(!process.env.FAILURE_FLAGS_ENABLED || !(process.env.FAILURE_FLAGS_ENABLED === "true" || process.env.FAILURE_FLAGS_ENABLED === "1")) {
+    const enabled = (process.env.FAILURE_FLAGS_ENABLED || '').trim().toLowerCase();
+    if(!['true', 'yes', '1'].includes(enabled)) {
       reject(new Error('failure flags is not enabled'));
       return
     }

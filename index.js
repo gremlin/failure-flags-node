@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+'use strict';
+
 const { fetchExperiment } = require('./src/fetch.js');
 const effect = require('./src/fault.js');
 const defaultBehavior = effect.delayedDataOrException;
@@ -42,7 +44,10 @@ const invokeFailureFlag = async ({name, labels, behavior = defaultBehavior, data
 
   if(debug) console.log('fetched experiments: ', experiments);
   const dice = Math.random();
-  filteredExperiments = experiments.filter((experiment) => {
+  const filteredExperiments = experiments.filter((experiment) => {
+    if(experiment == null || typeof experiment != "object") {
+      return false;
+    }
     if(typeof experiment.rate == "number" &&
         !isNaN(experiment.rate) &&
         experiment.rate >= 0 &&

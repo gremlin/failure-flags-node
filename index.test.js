@@ -209,10 +209,16 @@ let responses = {
       }
     }
   },
-
+  nullEntries: [null, "garbage", {
+    guid: "6884c0df-ed70-4bc8-84c0-dfed703bc8a7",
+    failureFlagName: "nullEntries",
+    rate: 1,
+    effect: {}
+  }],
 };
 
 let mockServer = {};
+let lastRequest = null;
 
 beforeAll(() => {
   // enable failure flags
@@ -222,6 +228,7 @@ beforeAll(() => {
   const app = express();
   app.use(express.json());
   app.post('/experiment', (req, res) => {
+    lastRequest = req.body;
     res.status(200).json(responses[req.body.name]);
   });
   mockServer = app.listen('5032', 'localhost');
@@ -482,6 +489,73 @@ test('invokeFailureFlag returns dataPrototype if dataPrototype is set and no exp
   }
   expect(setTimeout).toHaveBeenCalledTimes(0);
   expect(response).toHaveProperty('property1', 'prototype value');
+});
+
+test('invokeFailureFlag returns dataPrototype if experiment active without data effect', async () => {
+  const prototype = {property1: 'prototype value'};
+  const response = await failureflags.invokeFailureFlag({
+    name: 'defaultBehaviorWithNoException',
+    labels: {a:'1',b:'2'},
+    dataPrototype: prototype,
+    debug: false});
+  expect(response).toBe(prototype);
+});
+
+test('invokeFailureFlag does not mutate caller labels and sends sdk version', async () => {
+  const labels = Object.freeze({a:'1',b:'2'});
+  expect(await failureflags.invokeFailureFlag({
+    name: 'custom',
+    labels,
+    behavior: ()=>{},
+    debug: false})).toBe(true);
+  expect(labels).toEqual({a:'1',b:'2'});
+  expect(lastRequest.labels).toEqual({a:'1', b:'2', 'failure-flags-sdk-version': expect.stringMatching(/^node-v/)});
+});
+
+test('invokeFailureFlag ignores non-object experiments', async () => {
+  const behavior = jest.fn();
+  expect(await failureflags.invokeFailureFlag({
+    name: 'nullEntries',
+    labels: {a:'1',b:'2'},
+    behavior,
+    debug: false})).toBe(true);
+  expect(behavior).toHaveBeenCalledWith([responses.nullEntries[2]]);
+});
+
+test('data effect result keeps prototype fields as own properties and class methods', async () => {
+  class Response {
+    constructor() { this.property1 = 'prototype value'; this.property2 = 'prototype value'; }
+    describe() { return `${this.property1}/${this.property2}`; }
+  }
+  const prototype = new Response();
+  const response = await failureflags.invokeFailureFlag({
+    name: 'alteredResponseValue',
+    labels: {a:'1',b:'2'},
+    behavior: failureflags.effect.data,
+    dataPrototype: prototype,
+    debug: false});
+  expect(JSON.parse(JSON.stringify(response))).toEqual({
+    property1: 'prototype value',
+    property2: 'experiment value',
+    property3: 'experiment originated'});
+  expect(response).toBeInstanceOf(Response);
+  expect(response.describe()).toBe('prototype value/experiment value');
+  expect(prototype.property2).toBe('prototype value');
+});
+
+test.each(['true', 'TRUE', 'yes', 'Yes', '1', ' true '])('invokeFailureFlag is enabled if FAILURE_FLAGS_ENABLED is "%s"', async (value) => {
+  process.env.FAILURE_FLAGS_ENABLED = value
+  expect(await failureflags.invokeFailureFlag({
+    name: 'custom',
+    labels: {a:'1',b:'2'},
+    behavior: ()=>{}})).toBe(true);
+});
+
+test('invokeFailureFlag does nothing if FAILURE_FLAGS_ENABLED is "false"', async () => {
+  process.env.FAILURE_FLAGS_ENABLED = "false"
+  expect(await failureflags.invokeFailureFlag({
+    name: 'custom',
+    labels: {a:'1',b:'2'}})).toBe(false);
 });
 
 afterEach(() => {
