@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+'use strict';
+
 const latency = async (experiments) => {
   for (let i = 0; i < experiments.length; ++i) {
     let experiment = experiments[i];
